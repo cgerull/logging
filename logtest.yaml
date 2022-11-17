@@ -1,0 +1,12 @@
+execution:
+- concurrency: 5
+  ramp-up: 20s
+  hold-for: 2m
+  scenario: TestServerEcho
+ 
+
+scenarios:
+  TestServerEcho:
+    default-address: http://localhost:8080
+    requests: 
+      - /

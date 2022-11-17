@@ -1,0 +1,11 @@
+apiVersion: v2
+name: fluent-bit
+description: Umbrella chart for fluentbit services
+type: application
+version: 0.1.0
+dependencies:
+  - name: "fluent-bit"
+    # repository:  https://fluent.github.io/helm-charts
+    repository: "@fluent"
+    version: ~0.21
+    # condition: fluentbit.enabled
