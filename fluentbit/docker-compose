@@ -1,0 +1,16 @@
+---
+version: "3.7"
+
+services:
+  fluent-bit:
+    image: cr.fluentbit.io/fluent/fluent-bit
+    volumes:
+      - ./fluentbit.conf:/fluent-bit/etc/fluent-bit.conf
+      - .:/data
+      - /var/snap/docker/common/var-lib-docker/containers/:/containers
+      - /run:/docker
+    networks:
+      - graylog
+networks:
+  graylog:
+    external: true

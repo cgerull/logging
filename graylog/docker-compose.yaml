@@ -1,0 +1,75 @@
+version: '3'
+# Graylog test en demo environment
+#
+# Run on a dockerhost with at least 8GB and 4 CPU free.
+# prepare environment:
+# mkdir -p mongodb elasticsearchdata graylog/journal graylog/config
+# sudo docker network create -d bridge graylog
+# cd ./graylog/config
+# wget https://raw.githubusercontent.com/Graylog2/graylog-docker/4.3/config/graylog.conf
+# wget https://raw.githubusercontent.com/Graylog2/graylog-docker/4.3/config/log4j2.xml
+#
+#
+services:
+    # MongoDB: https://hub.docker.com/_/mongo/
+    mongo:
+      image: mongo:4.2
+      volumes:
+       - ./mongodb:/data/db
+      networks:
+        - graylog
+    # Elasticsearch: https://www.elastic.co/guide/en/elasticsearch/reference/7.10/docker.html
+    elasticsearch:
+      image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2
+      environment:
+        - http.host=0.0.0.0
+        - transport.host=localhost
+        - network.host=0.0.0.0
+        - "ES_JAVA_OPTS=-Dlog4j2.formatMsgNoLookups=true -Xms512m -Xmx512m"
+      volumes:
+        - ./elasticsearchdata:/usr/share/elasticsearch/data
+      ulimits:
+        memlock:
+          soft: -1
+          hard: -1
+      deploy:
+        resources:
+          limits:
+            memory: 1g
+      networks:
+        - graylog
+    # Graylog: https://hub.docker.com/r/graylog/graylog/
+    graylog:
+      image: graylog/graylog:4.3
+      environment:
+        # CHANGE ME (must be at least 16 characters)!
+        - GRAYLOG_PASSWORD_SECRET=somepasswordpepper
+        # Password: admin
+        - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+        - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
+      volumes:
+        - ./graylog/journal:/usr/share/graylog/data/journal
+        - ./graylog/config:/usr/share/graylog/data/config
+      entrypoint: /usr/bin/tini -- wait-for-it elasticsearch:9200 --  /docker-entrypoint.sh
+      networks:
+        - graylog
+      restart: always
+      depends_on:
+        - mongo
+        - elasticsearch
+      ports:
+        # Graylog web interface and REST API
+        - 9000:9000
+        # Syslog TCP
+        - 1514:1514
+        # Syslog UDP
+        - 1514:1514/udp
+        # GELF TCP
+        - 12201:12201
+        # GELF UDP
+        - 12201:12201/udp
+        # Text TCP
+        - 5555:5555
+networks:
+    graylog:
+      external: true

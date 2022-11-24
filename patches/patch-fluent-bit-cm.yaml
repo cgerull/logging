@@ -72,7 +72,7 @@ data:
         Remove kubernetes_host
         Remove time
         Remove kubernetes_container_hash
-        Add k8s.cluster.name Onlineboutique
+        Add k8s.cluster.name k3d-logging
 
     [FILTER]
         Name     throttle
